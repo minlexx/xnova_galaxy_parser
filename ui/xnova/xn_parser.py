@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+import sys
 import html.parser
 
 from . import xn_logger
@@ -52,7 +53,11 @@ def get_tag_classes(attrs: list) -> list:
 # by remembering tags path
 class XNParserBase(html.parser.HTMLParser):
     def __init__(self):
-        super(XNParserBase, self).__init__(strict=False, convert_charrefs=True)
+        if (sys.version_info.major >= 3) and (sys.version_info.minor >= 5):
+            # python 3.5 does not know the keyword "strict" in constructor
+            super(XNParserBase, self).__init__(convert_charrefs=True)
+        else:
+            super(XNParserBase, self).__init__(strict=False, convert_charrefs=True)
         self._last_tag = ''
         self._last_attrs = list()
 
