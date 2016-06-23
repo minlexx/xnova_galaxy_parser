@@ -36,6 +36,7 @@ galaxy_range = (1, 5)
 system_range = (1, 499)
 max_cache_secs = 10 * 3600  # cache galaxy pages for 10 hours
 status_filename = 'galaxy_auto_parser.json'
+g_xnova_host = 'uni4.xnova.su'
 
 
 ###############################################
@@ -224,36 +225,53 @@ def db_set_galaxy_row(r: GalaxyRow):
         q = 'UPDATE planets SET \
             planet_id=?, planet_name=?, planet_type=?, planet_metal=?, planet_crystal=?, planet_destroyed=?, \
             luna_id=?,  luna_name=?,  luna_diameter=?, luna_destroyed=?, \
-            user_id=?,  user_name=?,  user_rank=?, user_totalpoints=?, user_authlevel=?, user_onlinetime=?, user_banned=?, user_ro=?, user_race=?, \
+            user_id=?,  user_name=?,  user_rank=?, user_totalpoints=?, user_authlevel=?, user_onlinetime=?, \
+                        user_banned=?, user_ro=?, user_race=?, \
             ally_id=?,  ally_name=?, ally_tag=?, ally_members=? \
             WHERE (g=? AND s=? AND p=?)'
-        cur.execute(
-            q, (r.planet_id, r.planet_name, r.planet_type, r.planet_metal, r.planet_crystal, r.planet_destroyed,
+        cur.execute(q, (
+            r.planet_id, r.planet_name, r.planet_type, r.planet_metal, r.planet_crystal, r.planet_destroyed,
             r.luna_id, r.luna_name, r.luna_diameter, r.luna_destroyed,
-            r.user_id, r.user_name, r.user_rank, r.user_totalpoints, r.user_authlevel, r.user_onlinetime, r.user_banned, r.user_ro, r.user_race,
+            r.user_id, r.user_name, r.user_rank, r.user_totalpoints, r.user_authlevel, r.user_onlinetime,
+            r.user_banned, r.user_ro, r.user_race,
             r.ally_id, r.ally_name, r.ally_tag, r.ally_members,
             r.galaxy, r.system, r.position))
     else:
         q = 'INSERT INTO planets VALUES (?,?,?, ?,?,?,?,?,?, ?,?,?,?, ?,?,?,?,?,?,?,?,?, ?,?,?,?)'
-        cur.execute(
-            q, (r.galaxy, r.system, r.position,
+        cur.execute(q, (
+            r.galaxy, r.system, r.position,
             r.planet_id, r.planet_name, r.planet_type, r.planet_metal, r.planet_crystal, r.planet_destroyed,
             r.luna_id, r.luna_name, r.luna_diameter, r.luna_destroyed,
-            r.user_id, r.user_name, r.user_rank, r.user_totalpoints, r.user_authlevel, r.user_onlinetime, r.user_banned, r.user_ro, r.user_race,
+            r.user_id, r.user_name, r.user_rank, r.user_totalpoints, r.user_authlevel, r.user_onlinetime,
+            r.user_banned, r.user_ro, r.user_race,
             r.ally_id, r.ally_name, r.ally_tag, r.ally_members))
     g_db.commit()
     cur.close()
 
 
 def xnova_authorize(xn_login, xn_password):
+    global g_xnova_host
+
     postdata = {
         'emails': xn_login,
         'password': xn_password,
         'rememberme': 'on'
     }
-    r = requests.post('http://uni4.xnova.su/?set=login&xd',
-                      data=postdata,
-                      allow_redirects=False)
+    post_url = 'http://uni4.xnova.su/?set=login&xd'
+
+    # uni5 fix
+    if g_xnova_host.startswith('uni5'):
+        postdata = {
+            'email': xn_login,
+            'password': xn_password,
+            'rememberme': 'on',
+            'ajax': 'Y'
+        }
+        post_url = 'https://uni5.xnova.su/index/login/?'
+
+    logger.info('Trying to authorize in XNova, url = {0} ...'.format(post_url))
+
+    r = requests.post(post_url, data=postdata, allow_redirects=False)
     # print(r.content)  # empty
     # print(r.text)     # also empty
     cookies_dict = {}
@@ -261,8 +279,14 @@ def xnova_authorize(xn_login, xn_password):
         cookies_dict[single_cookie[0]] = single_cookie[1]
     # print(cookies_dict)
     if ('x_id' not in cookies_dict) and ('x_secret' not in cookies_dict) \
-        and ('x_uni' not in cookies_dict):
-        return None
+            and ('x_uni' not in cookies_dict):
+        # uni4 auth failed, try uni5
+        logger.warn('Uni4 auth failed')
+        if g_xnova_host.startswith('uni5'):
+            if ('u5_secret' not in cookies_dict) and ('u5_id' not in cookies_dict):
+                logger.warn('Uni5 auth failed')
+                return None
+    logger.info('Login OK')
     return cookies_dict
 
 
@@ -273,7 +297,10 @@ def go_galaxy_system(gal, sys_):
     content = g_page_cache.get_page(page_name, max_cache_secs)
     if content is None:
         # not in cache, or invalid, try to download
-        url_path = '?set=galaxy&r=3&galaxy={0}&system={1}'.format(gal, sys_)
+        if g_page_dnl.xnova_url.startswith('uni5'):
+            url_path = 'galaxy/{0}/{1}/'.format(gal, sys_)
+        else:  # uni4 path
+            url_path = '?set=galaxy&r=3&galaxy={0}&system={1}'.format(gal, sys_)
         content = g_page_dnl.download_url_path(url_path)
         if content is None:
             return False
@@ -295,7 +322,7 @@ def go_galaxy_system(gal, sys_):
             galaxy_row.from_row(gal, sys_, row)
             try:
                 db_set_galaxy_row(galaxy_row)
-            except OverflowError as ove:
+            except OverflowError:
                 logger.error('Got overflow error while processing a row at [{0}:{1}:{2}]:'.format(
                     gal, sys_, galaxy_row.position))
                 logger.error(str(row))
@@ -314,11 +341,13 @@ def go_galaxy_system(gal, sys_):
 def output_progress(ts_start, num, total, gal, sys_):
     ts_now = time.time()
     secs_passed = int(ts_now - ts_start)
+    secs_left = 3600 * 24 * 999
     speed = 0
     if secs_passed > 0:
         speed = num / secs_passed
     requests_left = total - num
-    secs_left = int(requests_left / speed)
+    if speed > 0:
+        secs_left = int(requests_left / speed)
     hrs_left = int(secs_left / 3600)
     secs_left -= (hrs_left * 3600)
     mins_left = int(secs_left / 60)
@@ -334,6 +363,7 @@ def output_progress(ts_start, num, total, gal, sys_):
         status = dict()
         status['done'] = num
         status['total'] = total
+        status['position'] = '[{0}:{1}:...]'.format(gal, sys_)
         with open(status_filename, mode='wt', encoding='UTF-8') as f:
             json.dump(status, f, indent=4, sort_keys=True)
     except IOError:
@@ -345,9 +375,13 @@ def go():
     num_systems = int(system_range[1]) - int(system_range[0]) + 1
     total_requests = num_galaxies * num_systems
     num_requests = 0
-    logger.info('Starting scan gals {0}, systems {1}, total {2} requests'.format(
+
+    global g_got_from_cache, g_xnova_host
+
+    logger.info('Using XNova host: {0}'.format(g_xnova_host))
+    logger.info('Start scanning galaxies {0}, systems {1}, total {2} requests'.format(
         galaxy_range, system_range, total_requests))
-    global g_got_from_cache
+
     ts_start = time.time()
     for gal in range(int(galaxy_range[0]), int(galaxy_range[1]) + 1):
         for sys_ in range(int(system_range[0]), int(system_range[1]) + 1):
@@ -378,6 +412,8 @@ def main():
     ap = argparse.ArgumentParser(description='XNova galaxy scanner/parser. All arguments '
                                              'are optional and have defaults. Default will scan all galaxy.')
     ap.add_argument('--version', action='version', version='%(prog)s 0.1')
+    ap.add_argument('--uni', nargs='?', default='uni4', type=str, metavar='UNI',
+                    help='XNova universe, for example: uni5. Default: uni4')
     ap.add_argument('--delay', nargs='?', default='5', type=int, metavar='DELAY_SEC',
                     help='delay between requests, in seconds. Default: 5 sec.')
     ap.add_argument('--galaxy-range', nargs='?', default='1,5', type=parse_range, metavar='FROM,TO',
@@ -407,9 +443,12 @@ Default is "./cache/cookies.json". Ignored if --login and --password are given a
 
     ns = ap.parse_args()
 
-    global g_db, status_filename, galaxy_range, system_range, max_cache_secs, delay_between_requests_secs
+    global g_db, status_filename, galaxy_range, system_range, max_cache_secs, \
+        delay_between_requests_secs, g_xnova_host
 
     # apply parsed arguments
+    xnova_uni = ns.uni
+    g_xnova_host = xnova_uni + '.xnova.su'
     g_db = sqlite3.connect(ns.db_filename)
     delay_between_requests_secs = ns.delay
     max_cache_secs = ns.cache_lifetime
@@ -439,13 +478,15 @@ Default is "./cache/cookies.json". Ignored if --login and --password are given a
     # init globals
     g_page_cache.load_from_disk_cache(clean=True)
     g_page_dnl.set_useragent(user_agent)
+    g_page_dnl.xnova_url = g_xnova_host  # set host to use
     if not have_login:
         if not g_page_dnl.load_cookies_from_file(cookies_filename):
             logger.error('Page downloader failed to load cookies JSON!')
-            logger.error('Please make sure that file "{0}" exists and contains cookies!'.format(cookies_filename))
+            logger.error('Please make sure that file "{0}" exists '
+                         'and contains cookies!'.format(cookies_filename))
             logger.error('(You can provide cookies with --cookies-filename option.)')
             sys.exit(1)
-    logger.info('Helpers init complete')
+    logger.debug('Helpers init complete')
     check_database_tables()
     go()
     g_db.close()
