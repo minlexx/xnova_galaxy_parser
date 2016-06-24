@@ -402,7 +402,16 @@ def go():
 
 
 def list_js_runtimes():
-    ajsr = execjs.available_runtimes()
+    # AttributeError: module 'execjs' has no attribute 'available_runtimes'
+    try:
+        ajsr = execjs.available_runtimes()
+    except AttributeError:
+        # Newer execjs does not have available_runtimes() method?
+        ajsr = []
+        supported_runtimes = execjs.runtimes()
+        for sr in supported_runtimes:
+            if supported_runtimes[sr].is_available():
+                ajsr.append(sr)
     if len(ajsr) > 0:
         print('Detected {0} JavaScript runtimes:'.format(len(ajsr)))
         for js in ajsr:
