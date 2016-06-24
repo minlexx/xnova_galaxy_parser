@@ -494,6 +494,9 @@ Default is "./cache/cookies.json". Ignored if --login and --password are given a
                                          json_filename=cookies_filename)
 
     # init globals
+    # for uni5 use different cache directory not to overlap with uni4's dir
+    if xnova_uni == 'uni5':
+        g_page_cache.set_cache_basedir('./cache5')
     g_page_cache.load_from_disk_cache(clean=True)
     g_page_dnl.set_useragent(user_agent)
     g_page_dnl.xnova_url = g_xnova_host  # set host to use

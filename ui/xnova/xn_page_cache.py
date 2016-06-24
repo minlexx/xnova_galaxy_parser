@@ -22,6 +22,10 @@ class XNovaPageCache:
         self.save_load_encoding = locale.getpreferredencoding()
         logger.debug('Locale preferred encoding: {0}'.format(self.save_load_encoding))
 
+    def set_cache_basedir(self, cache_basedir: str):
+        self._page_cache_dir = cache_basedir + '/page'
+        self._img_cache_dir = cache_basedir + '/img'
+
     # scan ./cache directory and load all files into memory
     def load_from_disk_cache(self, clean=True):
         if clean:
