@@ -124,7 +124,10 @@ class GalaxyRow:
         self.system = int_(sys_)
         self.position = int_(row['planet'])
         # planet info
-        self.planet_id = int_(row['id_planet'])
+        try:
+            self.planet_id = int_(row['id_planet'])  # uni4 mode
+        except KeyError:
+            self.planet_id = int_(row['planet_id'])  # uni5 has other key name
         self.planet_name = str_(row['name'])
         self.planet_type = int_(row['planet_type'])
         self.planet_metal = int_(row['metal'])
@@ -145,8 +148,14 @@ class GalaxyRow:
         self.user_totalpoints = int_(row['total_points'])
         self.user_authlevel = int_(row['authlevel'])
         self.user_onlinetime = int_(row['onlinetime'])
-        self.user_banned = int_(row['banaday'])
-        self.user_ro = int_(row['urlaubs_modus_time'])
+        try:
+            self.user_banned = int_(row['banaday'])
+        except KeyError:
+            self.user_banned = int_(row['banned'])  # again, uni5 mode
+        try:
+            self.user_ro = int_(row['urlaubs_modus_time'])
+        except KeyError:
+            self.user_ro = int_(row['vacation'])
         self.user_race = int_(row['race'])
         self.user_image = str_(row['user_image'])
         # ally info
