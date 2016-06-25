@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <title>XNova Uni5 Galaxy map</title>
+  <link rel="icon" type="image/vnd.microsoft.icon" href="/xnova/favicon.ico" />
+  <link rel="stylesheet" media="screen" type="text/css" href="css/main.css" />
+  <link rel="stylesheet" type="text/css" href="css/easyui.css">
+  <link rel="stylesheet" type="text/css" href="css/icon.css">
+  <script type="text/javascript" src="js/jquery.min.js"></script>
+  <script type="text/javascript" src="js/jquery.easyui.min.js"></script>
+  <script type="text/javascript" src="js/my.js"></script>
+</head>
+
+<body>
+
+<h1>Карта вселенной uni5 </h1>[ <a href="../xnova/">uni4</a> | uni5 ]
+
+<div class="easyui-tabs" style="width:100%">
+
+  <div title="Поиск по имени" iconCls="icon-search" closable="false" style="padding:10px;">
+    <p>Поиск всех объектов игрока/альянса по имени (или названию):</p>
+    &nbsp;    &nbsp;    &nbsp;    &nbsp;
+    <input id="sb" class="easyui-searchbox"
+           data-options="prompt:'Имя / название',menu:'#sb_menu',searcher:doSearchPlayerorAlliance"
+           style="width:250px" />
+    <div id="sb_menu">
+      <div data-options="name:'player'">Игрок</div>
+      <div data-options="name:'alliance'">Альянс</div>
+    </div>
+  </div>
+
+  <div title="Поиск неактивных" iconCls="icon-search" closable="false" style="padding:10px;">
+    <p>Поиск неактивных игроков, забаненных итд. Можно выбрать, кого включить в поиск,
+      и дополнительно задать диапазон координат для поиска.</p>
+    <table border="0" cellpadding="10" cellspacing="5" width="90%">
+      <tr>
+        <td rowspan="3" style="vertical-align:top; width:200px">
+          <input id="chk_inactive1" type="checkbox" checked="checked" name="chk_i" />
+          <label for="chk_inactive1">Неактивен более 7 дней</label>
+          <br />
+          <input id="chk_inactive2" type="checkbox" checked="checked" name="chk_ii" />
+          <label for="chk_inactive2">Неактивен более 30 дней</label>
+          <br />
+          <input id="chk_banned" type="checkbox" name="chk_banned" />
+          <label for="chk_banned">Забанен</label>
+          <br />
+          <input id="chk_ro" type="checkbox" name="chk_ro" />
+          <label for="chk_ro">В режиме отпуска</label>
+          <br />
+          <br />
+          <a href="#" class="easyui-linkbutton" data-options="iconCls:'icon-search'"
+             style="width:150px; height:50px" onclick="search_inactives(); return false;">Поехали!</a>
+        </td>
+        <td style="vertical-align:top">
+          <p>В галактиках:</p>
+        </td>
+        <td style="vertical-align:middle">
+          <input id="chk_g1" type="checkbox" name="chk_g1" checked="checked" />
+          <label for="chk_g1">1</label>
+          <input id="chk_g2" type="checkbox" name="chk_g2" checked="checked" />
+          <label for="chk_g2">2</label>
+          <input id="chk_g3" type="checkbox" name="chk_g3" checked="checked" />
+          <label for="chk_g3">3</label>
+          <input id="chk_g4" type="checkbox" name="chk_g4" checked="checked" />
+          <label for="chk_g4">4</label>
+          <input id="chk_g5" type="checkbox" name="chk_g5" checked="checked" />
+          <label for="chk_g5">5</label>
+        </td>
+      </tr>
+      <tr>
+        <td style="vertical-align:top">
+          <p>Диапазон систем:</p>
+        </td>
+        <td style="vertical-align:middle">
+          <input class="easyui-slider" id="slide_sys" style="width:500px; margin-top: 50px;" data-options="
+                    showTip: true,
+                    range: true,
+                    min: 1, max: 499,
+                    value: [1,499],
+                    rule: [1, 100,200,300,400,499],
+                    onChange: on_ss_slider_change" />
+          <br />
+          <br />
+          [ <input type="text" id="nn_s_min" class="easyui-numberbox" value="1" style="width: 40px"
+                 data-options="min:1,max:499,onChange:on_nb_ss_min_change" /> -
+          <input type="text" id="nn_s_max" class="easyui-numberbox" value="499" style="width: 40px"
+                 data-options="min:1,max:499,onChange:on_nb_ss_max_change" /> ]
+          <a href="#" class="easyui-linkbutton" onclick="reset_sliders(); return false;">Вся вселенная</a>
+        </td>
+      </tr>
+      <tr>
+        <td style="vertical-align:top">
+          Мин. ранг:
+        </td>
+        <td style="vertical-align:top">
+          <input type="text" id="nn_min_rank" class="easyui-numberbox" value="200" style="width: 40px; display:inline"
+                 data-options="min:0,max:1000000" />
+        </td>
+      </tr>
+    </table>
+  </div>
+
+  <div title="Последние бои" iconCls="icon-tip" closable="false" style="padding:10px;">
+    Логи боев за последние
+    <input id="sb_lastlogs" class="easyui-searchbox"
+           data-options="prompt:'24',menu:'#sb_ll_menu',searcher:load_lastlogs"
+           style="width:150px" value="24" />
+    <div id="sb_ll_menu">
+      <div data-options="name:'hours'">часов</div>
+      <div data-options="name:'days'">дней</div>
+    </div>
+
+    Бои игрока: <input id="sb_nick_filter" class="easyui-textbox"
+        data-options="prompt:'ник (необязательно)'" style="width:150px" />
+
+    <a href="#" class="easyui-linkbutton" data-options="iconCls:'icon-search'"
+       style="width:120px" onclick="load_lastlogs(); return false;">Показать</a>
+
+    <br />
+    <span class="comment">Сюда попадают только логи, автоматически сохраняемые сервером,
+      когда потери превышают 1 миллион ресурсов</span>
+    <br />
+    <span class="comment">Данная страница пока находится в стадии доработки!</span>
+    <br />
+    <br />
+
+    <table id="dg_lastlogs" style="width:100%"></table>
+  </div>
+
+  <div title="База данных" iconCls="icon-save" closable="false" style="padding:10px;">
+    <p>SQLite 3 база:
+      <a href="galaxy5.db">
+        <img src="css/icons/filesave.png" style="vertical-align: middle" />
+        galaxy5.db</a>,
+      <i>~52 Kb</i>
+    </p>
+    <p>Процесс обновления базы галактики:</p>
+    <div id="p_dbupdate" class="easyui-progressbar" data-options="value:100" style="width:300px;"></div>
+    <div id="p_dbupdate_pos" style="display: inline;"></div>
+    <p>(промежуточные значения будут указывать на то, что данный момент идет обновление БД)</p>
+  </div>
+</div>
+<br />
+
+
+<h2>Результат запроса:</h2>
+
+<table id="dg_result" style="width:100%"></table>
+
+<script type="text/javascript">
+$('#dg_result').datagrid({
+  url:'index.py',
+  method: 'get',
+  queryParams: {ajax: 'grid'},
+  fitColumns: false,
+  singleSelect: true,
+  striped: true,
+  loadMsg: 'Загрузка...',
+  columns:[[
+      {field:'user_name', title:'Игрок', sortable:true, width:150},
+      {field:'user_race_img', title:'', sortable:false, width:25},
+      {field:'user_rank', title:'Место', sortable:true, width:40},
+      {field:'planet_name', title:'Планета', sortable:true, width:150},
+      {field:'luna_name', title:'Луна', sortable:true, width:100},
+      {field:'coords_link', title:'Координаты', sortable:false, align:'center', width:100},
+      {field:'ally_name', title:'Альянс', sortable:true, width:200}
+  ]]
+});
+
+
+$('#dg_lastlogs').datagrid({
+  url:'index.py',
+  method: 'get',
+  queryParams: {ajax: 'lastlogs'},
+  fitColumns: false,
+  singleSelect: true,
+  striped: true,
+  loadMsg: 'Загрузка...',
+  columns:[[
+      {field:'log_id', title:'Лог №', sortable:true, width:50},
+      {field:'attacker', title:'Атакующий', sortable:true, width:200},
+      {field:'defender', title:'Защитник', sortable:true, width:200},
+      {field:'log_time', title:'Время', sortable:false, width:150},
+      {field:'total_loss', title:'Потери', sortable:true, width:80},
+      {field:'win', title:'Добыча', sortable:false, width:250},
+      {field:'po', title:'Поле обломков', sortable:true, width:200}
+  ]]
+});
+
+window.setTimeout( request_dbupdate_progress, 15000 );
+</script>
+
+<br />
+<br />
+<div class="credits">
+  Technologies used:
+  <a href="http://httpd.apache.org/" target="_blank">Apache</a>,
+  <a href="https://www.python.org/" target="_blank">Python 3</a>,
+  <a href="https://www.sqlite.org/" target="_blank">SQLite 3</a>,
+  <a href="https://nodejs.org/" target="_blank">Node.js</a>,
+  <a href="http://www.jquery.com/" target="_blank">jQuery</a>,
+  <a href="http://www.jeasyui.com/" target="_blank">jQuery EasyUI</a>
+</div>
+</body>
+</html>

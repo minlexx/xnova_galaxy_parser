@@ -1,0 +1,56 @@
+﻿<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="ru" lang="ru">
+<head>
+<meta http-equiv="Content-type" content="text/html; charset=UTF-8" />
+<title>Расчет шанса уничтожения луны с учетом метафизика</title>
+</head>
+
+<body>
+
+<script type="text/javascript" language="JavaScript">
+//<![[CDATA[
+function recalc_mc()
+{
+    const meta_add_N = 1.25;
+	const meta_del_rip = 0.75;
+    var N = document.getElementById("N").value;
+    var d = document.getElementById("d").value;
+    var moonc = Math.round((100 - Math.sqrt(d)) * Math.sqrt(N)*100)/100;
+    var ripc = Math.round(Math.sqrt(d)/2*100)/100;
+	var N2 = N * meta_add_N;
+	var moonc2 = Math.round((100 - Math.sqrt(d)) * Math.sqrt(N2)*100)/100;
+	var ripc2 = ripc * meta_del_rip;
+    if( moonc > 100 ) moonc = 100;
+	if( moonc < 0 ) moonc = 0;
+    if( ripc > 100 ) ripc = 100;
+	if( ripc < 0 ) ripc = 0;
+	if( moonc2 > 100 ) moonc2 = 100;
+	if( moonc2 < 0 ) moonc2 = 0;
+    if( ripc2 > 100 ) ripc2 = 100;
+	if( ripc2 < 0 ) ripc2 = 0;
+    document.getElementById("moon").innerHTML = moonc + " %";
+    document.getElementById("rip").innerHTML  = ripc + " %";
+	document.getElementById("moon2").innerHTML = moonc2 + " %";
+	document.getElementById("rip2").innerHTML  = ripc2 + " %";
+}
+//]]>
+</script>
+<br /><br />
+<div align="center">
+<table border="1" width="500">
+ <tr><td colspan="2">Расчет уничтожения луны</td></tr>
+ <tr><th>Диаметр луны:</th><th><input id="d" maxlength="4" onkeyup="recalc_mc()" type="text" size="6" value="7777" /></th></tr>
+ <tr><th>Кол-во ЗС:</th><th><input id="N" maxlength="5" onkeyup="recalc_mc()" type="text" size="6" value="1" /></th></tr>
+ <tr><th>Шанс уничтожения луны:</th><th><div id="moon">---</div></th></tr>
+ <tr><th>Шанс взрыва ЗС:</th><th><div id="rip">---</div></th></tr>
+ <tr><th>Шанс уничтожения луны (с метафизиком):</th><th><div id="moon2">---</div></th></tr>
+ <tr><th>Шанс взрыва ЗС (с метафизиком):</th><th><div id="rip2">---</div></th></tr>
+ <tr><th colspan="2"><input type="button" value="Расчет" onclick="recalc_mc()" /></th></tr>
+</table >
+
+<script language="Javascript" type="text/javascript">
+    recalc_mc();
+</script>
+</div>
+</body>
+</html>
