@@ -9,7 +9,7 @@ import wand.drawing
 import sqlite3
 
 output_filename = 'galaxy_map.png'
-db_filename = 'galaxy.db'
+db_filename = 'galaxy5.db'
 
 img = wand.image.Image(width=499, height=10, background=wand.color.Color('#fff'))
 dr = wand.drawing.Drawing()
@@ -17,7 +17,7 @@ sqconn = sqlite3.connect(db_filename)
 
 dr.clear()
 for x in range(0, 499):
-    for y in range(0, 5):
+    for y in range(0, 4):
         q = 'SELECT COUNT(*) FROM planets WHERE s=? AND g=?'
         cur = sqconn.cursor()
         cur.execute(q, (x+1, y+1))
