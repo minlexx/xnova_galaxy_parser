@@ -182,7 +182,7 @@ class GalaxyDB:
                 r['user_name'] += ' (' + user_flags + ')'
             # user race and race icon
             r['user_race'] = GalaxyDB.safe_int(row['user_race'])
-            r['user_race_img'] = '<img border="0" src="css/icons/race{0}.png" width="20" />'.format(r['user_race'])
+            r['user_race_img'] = '<img border="0" src="css/icons/race{0}.png" width="18" />'.format(r['user_race'])
             r['ally_name'] = GalaxyDB.safe_str(row['ally_name'])
             r['ally_tag'] = GalaxyDB.safe_str(row['ally_tag'])
             r['ally_members'] = GalaxyDB.safe_int(row['ally_members'])
