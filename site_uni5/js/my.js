@@ -144,3 +144,26 @@ function on_dbupdate_progress_request_error( jqXHR, textStatus, errorThrown ) {
         console.log(textStatus);
     }
 }
+
+
+window.g_gmap_jqXHR = null;
+
+function gmap_request_population() {
+    if (window.g_gmap_jqXHR) return false;
+    window.g_gmap_jqXHR = $.ajax({
+        method: 'GET',
+        url: 'gmap_ajax.py?mode=population',
+        cache: false,
+        dataType: 'json',
+        success: function(data) {
+            try {
+                console.log('Gmap population AJAX OK!');
+            } catch (err) {
+                console.log('Exception in onSuccess of gmap population AJAX: ' + err.message);
+            }
+        },
+        error: function(jqXHR, textStatus, errorThrown) {
+            console.log('Gmap population AJAX error: ' + errorThrown);
+        }
+    });
+}
