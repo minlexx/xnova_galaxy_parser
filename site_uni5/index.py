@@ -275,6 +275,13 @@ class GalaxyDB:
         self._cur.execute(q)
         return self._rows_to_res_list()
 
+    def query_planets_count(self, gal: int, sys_: int) -> int:
+        self._cur.execute('SELECT COUNT(*) FROM planets WHERE g=? AND s=?', (gal, sys_))
+        rows = self._cur.fetchall()
+        assert len(rows) == 1
+        assert len(rows[0]) == 1
+        return self.safe_int(rows[0][0])
+
 
 def debugprint(obj=None):
     print('Content-Type: text/plain; charset=utf-8')
@@ -479,6 +486,15 @@ if AJAX_ACTION == 'lastlogs':
     ret['rows'] = log_rows
     ret['total'] = len(log_rows)
     output_as_json(ret)
+    exit()
+
+if AJAX_ACTION == 'gmap_population':
+    gdb = GalaxyDB()
+    population_data = []
+    for g in range(1, 5):  # includes 0, not includes 5: [0..4]
+        for s in range(1, 500):  # [1..499]
+            population_data.append(gdb.query_planets_count(g, s))
+    output_as_json(population_data)
     exit()
 
 
