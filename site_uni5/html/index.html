@@ -131,6 +131,9 @@
 
   <div title="Карта" iconCls="" closable="false" style="padding:10px;">
     <p>В процессе...</p>
+    <p class="gmap_controls">
+      <input type="button" value="Population" onclick="gmap_request_population();" />
+    </p>
     <svg id="gmap" width="500" height="80"></svg>
     <script type="text/javascript">
       var gmap_svg = SVG('gmap').size(500, 80);

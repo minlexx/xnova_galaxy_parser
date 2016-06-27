@@ -150,19 +150,34 @@ window.g_gmap_jqXHR = null;
 
 function gmap_request_population() {
     if (window.g_gmap_jqXHR) return false;
+    //
+    gmap_text_loading.show();
+    //
     window.g_gmap_jqXHR = $.ajax({
         method: 'GET',
-        url: 'gmap_ajax.py?mode=population',
+        url: 'index.py?ajax=gmap_population',
         cache: false,
         dataType: 'json',
         success: function(data) {
             try {
-                console.log('Gmap population AJAX OK!');
+                // very inefficient, draws 4*499=1996 rectangles, it takes too much time for a browser
+                var g = 1, s = 0, i = 0;
+                for (i=0; i<data.length; i++) {
+                    var intensity = Math.round(255 * data[i] / 15);
+                    var fill_color = new SVG.Color({ r: intensity, g: intensity, b: intensity });
+                    gmap_svg.rect(1, 20).move(s, 80 - (g*20)).fill(fill_color.toHex());
+                    s++;
+                    if (s >= 499) { s = 0; g++; }
+                }
             } catch (err) {
                 console.log('Exception in onSuccess of gmap population AJAX: ' + err.message);
             }
+            window.g_gmap_jqXHR = null;
+            gmap_text_loading.hide();
         },
         error: function(jqXHR, textStatus, errorThrown) {
+            window.g_gmap_jqXHR = null;
+            gmap_text_loading.hide();
             console.log('Gmap population AJAX error: ' + errorThrown);
         }
     });
