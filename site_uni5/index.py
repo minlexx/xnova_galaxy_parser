@@ -427,6 +427,16 @@ if AJAX_ACTION == 'lastlogs':
     log_rows = []
     sqconn = sqlite3.connect('lastlogs.db')
     cur = sqconn.cursor()
+    #
+    # check if table 'logs' exists
+    cur.execute("SELECT COUNT(*) FROM sqlite_master WHERE name='logs' AND type='table'")
+    rows = cur.fetchall()
+    if (len(rows) != 1) or (rows[0][0] != '1'):
+        ret['rows'] = []
+        ret['total'] = 0
+        output_as_json(ret)
+        exit()
+    #
     if nick != '':
         q = 'SELECT log_id, log_time, attacker, defender, attacker_coords, defender_coords, ' \
             ' total_loss, po_me, po_cry, win_me, win_cry, win_deit ' \
