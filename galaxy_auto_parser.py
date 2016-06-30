@@ -21,6 +21,7 @@ except ImportError:
     sys.exit(1)
 
 from xnova import xn_logger
+from xnova.xn_auth import xnova_authorize
 from xnova.xn_page_cache import XNovaPageCache
 from xnova.xn_page_dnl import XNovaPageDownload
 from xnova.xn_parser_galaxy import GalaxyParser
@@ -258,47 +259,6 @@ def db_set_galaxy_row(r: GalaxyRow):
     cur.close()
 
 
-def xnova_authorize(xn_login, xn_password):
-    global g_xnova_host
-
-    postdata = {
-        'emails': xn_login,
-        'password': xn_password,
-        'rememberme': 'on'
-    }
-    post_url = 'http://uni4.xnova.su/?set=login&xd'
-
-    # uni5 fix
-    if g_xnova_host.startswith('uni5'):
-        postdata = {
-            'email': xn_login,
-            'password': xn_password,
-            'rememberme': 'on',
-            'ajax': 'Y'
-        }
-        post_url = 'https://uni5.xnova.su/index/login/?'
-
-    logger.info('Trying to authorize in XNova, url = {0} ...'.format(post_url))
-
-    r = requests.post(post_url, data=postdata, allow_redirects=False)
-    # print(r.content)  # empty
-    # print(r.text)     # also empty
-    cookies_dict = {}
-    for single_cookie in r.cookies.iteritems():
-        cookies_dict[single_cookie[0]] = single_cookie[1]
-    # print(cookies_dict)
-    if ('x_id' not in cookies_dict) and ('x_secret' not in cookies_dict) \
-            and ('x_uni' not in cookies_dict):
-        # uni4 auth failed, try uni5
-        logger.warn('Uni4 auth failed')
-        if g_xnova_host.startswith('uni5'):
-            if ('u5_secret' not in cookies_dict) and ('u5_id' not in cookies_dict):
-                logger.warn('Uni5 auth failed')
-                return None
-    logger.info('Login OK')
-    return cookies_dict
-
-
 def go_galaxy_system(gal, sys_):
     # try lo get page from cache
     global g_got_from_cache
@@ -482,7 +442,7 @@ Default is "./cache/cookies.json". Ignored if --login and --password are given a
 
     have_login = False
     if (ns.login != 'your@email.com') and (ns.password != 'your_secret_password'):
-        cookies_dict = xnova_authorize(ns.login, ns.password)
+        cookies_dict = xnova_authorize(g_xnova_host, ns.login, ns.password)
         if cookies_dict is None:
             logger.error('Failed to authorize in XNova!\n')
             sys.exit(1)
