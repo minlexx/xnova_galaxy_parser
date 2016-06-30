@@ -20,10 +20,10 @@ except ImportError:
     print('   then pip-3 install pyexecjs')
     sys.exit(1)
 
-from ui.xnova import xn_logger
-from ui.xnova.xn_page_cache import XNovaPageCache
-from ui.xnova.xn_page_dnl import XNovaPageDownload
-from ui.xnova.xn_parser_galaxy import GalaxyParser
+from xnova import xn_logger
+from xnova.xn_page_cache import XNovaPageCache
+from xnova.xn_page_dnl import XNovaPageDownload
+from xnova.xn_parser_galaxy import GalaxyParser
 
 ###############################################
 # configure some parameters
