@@ -389,7 +389,7 @@ def main():
     # parse command line
     ap = argparse.ArgumentParser(description='XNova galaxy scanner/parser. All arguments '
                                              'are optional and have defaults. Default will scan all galaxy.')
-    ap.add_argument('--version', action='version', version='%(prog)s 0.1')
+    ap.add_argument('--version', action='version', version='%(prog)s 0.2')
     ap.add_argument('--uni', nargs='?', default='uni4', type=str, metavar='UNI',
                     help='XNova universe, for example: uni5. Default: uni4')
     ap.add_argument('--delay', nargs='?', default='5', type=int, metavar='DELAY_SEC',
