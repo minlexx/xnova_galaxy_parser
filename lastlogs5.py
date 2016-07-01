@@ -252,7 +252,7 @@ def main():
     page_dnl.set_cookies_from_dict(cookies_dict, do_save=False)
 
     lastlog_id = lldb.get_lastlog_id()
-    logger.debug('Got lastlog ID from DB: {0}'.format(lastlog_id))
+    logger.info('Got lastlog ID from DB: {0}'.format(lastlog_id))
     lastlog_id += 1  # move on to next log id
 
     parser = PageParser()
