@@ -46,9 +46,12 @@ class XNovaPageDownload:
         if cookies_dict:
             self.set_cookies_from_dict(cookies_dict)
 
-    def set_useragent(self, ua_str):
+    def set_useragent(self, ua_str: str):
         self.user_agent = ua_str
         self.sess.headers.update({'user-agent': self.user_agent})
+
+    def set_referer(self, ref_str: str):
+        self.sess.headers.update({'referer': ref_str})
 
     def set_cookies_from_dict(self, cookies_dict: dict, do_save=False, json_filename=None):
         self.sess.cookies = requests.cookies.cookiejar_from_dict(cookies_dict)
