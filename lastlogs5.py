@@ -14,7 +14,7 @@ from xnova.xn_parser import XNParserBase, get_tag_classes
 from xnova.lastlogs_utils import safe_int, LLDb
 
 
-logger = xn_logger.get(__name__, debug=True)
+logger = xn_logger.get(__name__, debug=False)
 
 
 def split_attacker_defender_line(s: str) -> tuple:
