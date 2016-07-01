@@ -7,7 +7,7 @@ import time
 from xnova import xn_logger
 from xnova.xn_auth import xnova_authorize
 from xnova.xn_page_dnl import XNovaPageDownload
-from xnova.xn_parser import XNParserBase, get_attribute, get_tag_classes
+from xnova.xn_parser import XNParserBase, get_tag_classes
 
 from xnova.lastlogs_utils import safe_int, LLDb
 
@@ -220,13 +220,13 @@ def main():
     ap = argparse.ArgumentParser(description='XNova Uni5 combat logs parser.')
     ap.add_argument('--version', action='version', version='%(prog)s 0.2')
     ap.add_argument('--debug', action='store_true', help='Enable debug logging.')
-    ap.add_argument('--login', nargs=1, default='', type=str, metavar='LOGIN',
+    ap.add_argument('--login', nargs='?', default='', type=str, metavar='LOGIN',
                     help='Login to use to authorize in XNova game')
-    ap.add_argument('--password', nargs=1, default='', type=str, metavar='PASS',
+    ap.add_argument('--password', nargs='?', default='', type=str, metavar='PASS',
                     help='Password to use to authorize in XNova game')
-    ap.add_argument('--dbfile', nargs=1, default='lastlogs5.db', type=str, metavar='DBFILE',
+    ap.add_argument('--dbfile', nargs='?', default='lastlogs5.db', type=str, metavar='DBFILE',
                     help='Name of sqlite3 db file to store logs data. Default is "lastlogs5.db"')
-    ap.add_argument('--delay', nargs=1, default=5, type=int, metavar='SECONDS',
+    ap.add_argument('--delay', nargs='?', default=5.0, type=float, metavar='SECONDS',
                     help='Delay in seconds between requests (default: 5 secs)')
     ap_result = ap.parse_args()
 
