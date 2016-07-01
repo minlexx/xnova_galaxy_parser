@@ -3,10 +3,6 @@ import re
 import argparse
 import logging
 import time
-import html.parser
-
-import requests
-import requesocks
 
 from xnova import xn_logger
 from xnova.xn_auth import xnova_authorize
@@ -230,6 +226,8 @@ def main():
                     help='Password to use to authorize in XNova game')
     ap.add_argument('--dbfile', nargs=1, default='lastlogs5.db', type=str, metavar='DBFILE',
                     help='Name of sqlite3 db file to store logs data. Default is "lastlogs5.db"')
+    ap.add_argument('--delay', nargs=1, default=5, type=int, metavar='SECONDS',
+                    help='Delay in seconds between requests (default: 5 secs)')
     ap_result = ap.parse_args()
 
     if ap_result.debug:
@@ -253,7 +251,7 @@ def main():
 
     lastlog_id = lldb.get_lastlog_id()
     logger.debug('Got lastlog ID from DB: {0}'.format(lastlog_id))
-    lastlog_id += 1 # move on to next log id
+    lastlog_id += 1  # move on to next log id
 
     parser = PageParser()
 
@@ -306,6 +304,8 @@ def main():
         if num_errors >= max_errors:
             logger.info('Max errors ({0}) exceeded, exiting'.format(num_errors))
             break
+
+        time.sleep(ap_result.delay)
 
     # Output statistics
     # always output failed logs
