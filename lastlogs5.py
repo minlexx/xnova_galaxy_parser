@@ -42,11 +42,15 @@ class PageParser(XNParserBase):  # parent of XNParserBase is html.parser.HTMLPar
         self.log_time = ''
         self.attacker = ''
         self.defender = ''
+        self.attacker_coords = ''
+        self.defender_coords = ''
         #
         self._in_report_user = False
         self._in_report_fleet = False
+        self._attackers_list = []
+        self._defenders_list = []
         self._attackers_coords_dict = {}
-        self._attackers_coords_dict = {}
+        self._defender_coords_dict = {}
 
     def reset(self):
         super(PageParser, self).reset()
@@ -57,6 +61,8 @@ class PageParser(XNParserBase):  # parent of XNParserBase is html.parser.HTMLPar
         #
         self._in_report_user = False
         self._in_report_fleet = False
+        self._attackers_list = []
+        self._defenders_list = []
         self._attackers_coords_dict = {}
         self._defender_coords_dict = {}
 
@@ -71,6 +77,17 @@ class PageParser(XNParserBase):  # parent of XNParserBase is html.parser.HTMLPar
             div_classes = get_tag_classes(attrs)
             if (div_classes is not None) and ('report_fleet' in div_classes):
                 self._in_report_fleet = True
+
+    def handle_endtag(self, tag: str):
+        super(PageParser, self).handle_endtag(tag)
+        # post-processing
+        if tag == 'html':
+            for att in self._attackers_list:
+                self.attacker_coords += self._attackers_coords_dict[att] + ','
+            for defender in self._defenders_list:
+                self.defender_coords += self._defender_coords_dict[defender] + ','
+            self.attacker_coords = self.attacker_coords[:-1]
+            self.defender_coords = self.defender_coords[:-1]
 
     # @override XNParserBase.handle_data2()
     def handle_data2(self, data: str, tag: str, attrs: list):
@@ -99,12 +116,14 @@ class PageParser(XNParserBase):  # parent of XNParserBase is html.parser.HTMLPar
                 if self.attacker != '':
                     self.attacker += ','
                 self.attacker += data
+                self._attackers_list.append(data)
                 self._in_report_user = False
             if self._in_report_user and span_positive:
-                self._in_report_user = False
                 if self.defender != '':
                     self.defender += ','
+                self._defenders_list.append(data)
                 self.defender += data
+                self._in_report_user = False
             # <div class='report_fleet'><span class='negative'>Атакующий xXxHari6aTop3000xXx [1:5:3]</span>
             if self._in_report_fleet and span_negative:
                 # Атакующий Шахтерская лопятка [1:2:3]
@@ -185,6 +204,8 @@ def main():
             #
             logger.debug(' Attackers: {0}'.format(parser.attacker))
             logger.debug(' Defenders: {0}'.format(parser.defender))
+            logger.debug(' Att.coords: {0}'.format(parser.attacker_coords))
+            logger.debug(' Def.coords: {0}'.format(parser.defender_coords))
 
         log_id += 1
 
