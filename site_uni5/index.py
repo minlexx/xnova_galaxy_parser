@@ -432,15 +432,16 @@ if AJAX_ACTION == 'lastlogs':
     # ret['cur_time'] = tm_now
     # ret['requested_time_interval_hrs'] = requested_time_interval_hrs
     log_rows = []
-    sqconn = sqlite3.connect('lastlogs.db')
+    sqconn = sqlite3.connect('lastlogs5.db')
     cur = sqconn.cursor()
     #
     # check if table 'logs' exists
     cur.execute("SELECT COUNT(*) FROM sqlite_master WHERE name='logs' AND type='table'")
     rows = cur.fetchall()
-    if (len(rows) != 1) or (rows[0][0] != '1'):
+    if (len(rows) != 1) or (rows[0][0] != 1):
         ret['rows'] = []
         ret['total'] = 0
+        ret['msg'] = 'table not found: logs'
         output_as_json(ret)
         exit()
     #
