@@ -205,12 +205,12 @@ class GalaxyDB:
         ret = []
         for row in self._cur.fetchall():
             p = dict()
-            p['g'] = row['g']
-            p['s'] = row['s']
-            p['p'] = row['p']
-            p['planet_name'] = row['planet_name']
-            p['planet_type'] = row['planet_type']
-            p['luna_name'] = row['luna_name']
-            p['luna_diameter'] = row['luna_diameter']
+            p['g'] = GalaxyDB.safe_int(row['g'])
+            p['s'] = GalaxyDB.safe_int(row['s'])
+            p['p'] = GalaxyDB.safe_int(row['p'])
+            p['planet_name'] = GalaxyDB.safe_str(row['planet_name'])
+            p['planet_type'] = GalaxyDB.safe_int(row['planet_type'])
+            p['luna_name'] = GalaxyDB.safe_str(row['luna_name'])
+            p['luna_diameter'] = GalaxyDB.safe_int(row['luna_diameter'])
             ret.append(p)
         return ret
