@@ -1,4 +1,4 @@
-function doSearchPlayerorAlliance(val, cat){
+function doSearchPlayerorAlliance(val, cat) {
     $('#sb').searchbox('disable');
     $('#dg_result').datagrid('load', {
         ajax: 'grid',
@@ -6,6 +6,16 @@ function doSearchPlayerorAlliance(val, cat){
         category: cat
     });
     $('#sb').searchbox('enable');
+}
+
+function doSearchPlayerActivity(val) {
+    console.log('doSearchPlayerActivity: ' + val)
+    $('#sb2').searchbox('disable');
+    $('#dg_lastactivity').datagrid('load', {
+        ajax: 'lastactive',
+        query: val
+    });
+    $('#sb2').searchbox('enable');
 }
 
 function load_lastlogs(val, cat) {

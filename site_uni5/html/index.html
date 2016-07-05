@@ -31,6 +31,18 @@
     </div>
   </div>
 
+  <div title="Проверка онлайна" iconCls="icon-search" closable="false" style="padding:10px;">
+    <p>Проверка последней активности на всех планетах игрока</p>
+    &nbsp;&nbsp;&nbsp;&nbsp;
+    <input id="sb2" class="easyui-searchbox"
+           data-options="prompt:'Имя (вводить точно)',searcher:doSearchPlayerActivity"
+           style="width: 250px" />
+    <br />
+    <span class="comment">Имя игрока вводить в точности как есть, буква в букву!</span>
+    <br /><br />
+    <table id="dg_lastactivity" style="width:90%"></table>
+  </div>
+
   <div title="Поиск неактивных" iconCls="icon-search" closable="false" style="padding:10px;">
     <p>Поиск неактивных игроков, забаненных итд. Можно выбрать, кого включить в поиск,
       и дополнительно задать диапазон координат для поиска.</p>
@@ -177,6 +189,23 @@ $('#dg_result').datagrid({
       {field:'luna_name', title:'Луна', sortable:true, width:100},
       {field:'coords_link', title:'Координаты', sortable:false, align:'center', width:100},
       {field:'ally_name', title:'Альянс', sortable:true, width:200}
+  ]]
+});
+
+
+$('#dg_lastactivity').datagrid({
+  url:'index.py',
+  method: 'get',
+  queryParams: {ajax: 'lastactive'},
+  fitColumns: false,
+  singleSelect: true,
+  striped: true,
+  loadMsg: 'Загрузка...',
+  columns:[[
+      {field:'planet_name', title:'Планета', sortable:true, width:150},
+      {field:'luna_name', title:'Луна', sortable:true, width:100},
+      {field:'coords_link', title:'Координаты', sortable:false, align:'center', width:100},
+      {field:'lastactive', title:'Активность, мин. назад', sortable:true, width:200}
   ]]
 });
 
