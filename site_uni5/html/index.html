@@ -34,13 +34,16 @@
   <div title="Проверка онлайна" iconCls="icon-search" closable="false" style="padding:10px;">
     <p>Проверка последней активности на всех планетах игрока</p>
     &nbsp;&nbsp;&nbsp;&nbsp;
-    <input id="sb2" class="easyui-searchbox"
+    Игрок: <input id="sb2" class="easyui-searchbox"
            data-options="prompt:'Имя (вводить точно)',searcher:doSearchPlayerActivity"
            style="width: 250px" />
     <br />
-    <span class="comment">Имя игрока вводить в точности как есть, буква в букву!</span>
+    <span class="comment">Имя игрока вводить в точности как есть, буква в букву!<br />
+      Процесс проверки занимает некоторое время и генерирует много запросов к серверу,
+      пожалуйста, не злоупотребляйте :)
+    </span>
     <br /><br />
-    <table id="dg_lastactivity" style="width:90%"></table>
+    <table id="dg_lastactivity" style="width:80%"></table>
   </div>
 
   <div title="Поиск неактивных" iconCls="icon-search" closable="false" style="padding:10px;">
