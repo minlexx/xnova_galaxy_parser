@@ -10,6 +10,7 @@ import re
 
 from classes.template_engine import TemplateEngine
 from classes.galaxy_db import GalaxyDB
+from classes.xnova_utils import xnova_authorize, PageDownloader, XNGalaxyParser
 
 
 def debugprint(obj=None):
@@ -148,7 +149,60 @@ if AJAX_ACTION == 'lastactive':
     if (player_name is not None) and (player_name != ''):
         gdb = GalaxyDB()
         planets_info = gdb.query_player_planets(player_name)
-        ret['planets_info'] = planets_info
+        # ret['planets_info'] = planets_info  # checked - this is OK
+        # list of dicts [{'g': 1, 's': 23, 'p': 9, ...}, {...}, {...}, ...]
+        if len(planets_info) > 0:
+            # cookies_dict = xnova_authorize('uni5.xnova.su', 'login', 'password')
+            # hope this cookie will live long enough
+            cookies_dict = {
+                'u5_id': '87',
+                'u5_secret': 'c01aa2ad533ddf1e890459df34450b87',
+                'u5_full': 'N'
+            }
+            dnl = PageDownloader(cookies_dict=cookies_dict)
+            gparser = XNGalaxyParser()
+            cached_pages = dict()  # coords -> page_content
+            for pinfo in planets_info:
+                # try to lookup page in a cache, with key 'galaxy,system'
+                coords_str = str(pinfo['g']) + ',' + str(pinfo['s'])  # '1,23'
+                if coords_str in cached_pages:
+                    page_content = cached_pages[coords_str]
+                else:
+                    page_content = dnl.download_url_path('galaxy/{0}/{1}/'.format(
+                        pinfo['g'], pinfo['s']), return_binary=False)
+                # seems to work, for now...
+                if page_content is None:
+                    ret['error'] = 'Failed to download, ' + dnl.error_str
+                    ret['rows'] = []
+                    break
+                else:
+                    cached_pages[coords_str] = page_content  # save to cache
+                    # ret['page'] = page_content  # checked, galaxy page loaded OK
+                    # now need to parse it
+                    gparser.clear()
+                    gparser.parse_page_content(page_content)
+                    galaxy_rows = gparser.unscramble_galaxy_script()
+                    if galaxy_rows is None:
+                        ret['error'] = 'Failed to parse galaxy page, ' + gparser.error_str
+                        ret['rows'] = []
+                        break
+                    else:
+                        # parse OK
+                        for planet_row in galaxy_rows:
+                            if planet_row is not None:
+                                planet_pos = GalaxyDB.safe_int(planet_row['planet'])
+                                if planet_pos == pinfo['p']:
+                                    ret_row = dict()
+                                    ret_row['planet_name'] = planet_row['name']
+                                    ret_row['luna_name'] = ''
+                                    if planet_row['luna_name'] is not None:
+                                        ret_row['luna_name'] = planet_row['luna_name']
+                                    ret_row['coords_link'] = '<a href="http://uni5.xnova.su/galaxy/{0}/{1}/">' \
+                                        '[{0}:{1}:{2}]</a>'.format(pinfo['g'], pinfo['s'], pinfo['p'])
+                                    ret_row['lastactive'] = planet_row['last_active']
+                                    ret['rows'].append(ret_row)
+            # recalculate total rows count
+            ret['total'] = len(ret['rows'])
         pass
     #
     output_as_json(ret)
