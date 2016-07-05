@@ -7,280 +7,9 @@ import json
 import sqlite3
 import time
 import re
-from mako.lookup import TemplateLookup
-from mako import exceptions
 
-
-class TemplateEngine:
-    def __init__(self, config: dict):
-        """
-        Constructor
-        :param config: dict with keys:
-         'TEMPLATE_DIR' - directory where to read template html files from
-         'TEMPLATE_CACHE_DIR' - dir to store compiled templates in
-        :return: None
-        """
-        if 'TEMPLATE_DIR' not in config:
-            config['TEMPLATE_DIR'] = '.'
-        if 'TEMPLATE_CACHE_DIR' not in config:
-            config['TEMPLATE_CACHE_DIR'] = '.'
-        params = {
-            'directories':      config['TEMPLATE_DIR'],
-            'module_directory': config['TEMPLATE_CACHE_DIR'],
-            'input_encoding':   'utf-8',
-            # 'output_encoding':   'utf-8',
-            # 'encoding_errors':  'replace',
-            'strict_undefined': True
-        }
-        self._lookup = TemplateLookup(**params)
-        self._args = dict()
-        self._headers_sent = False
-
-    def assign(self, vname, vvalue):
-        """
-        Assign template variable value
-        :param vname: - variable name
-        :param vvalue: - variable value
-        :return: None
-        """
-        self._args[vname] = vvalue
-
-    def unassign(self, vname):
-        """
-        Unset template variablr
-        :param vname: - variable name
-        :return: None
-        """
-        if vname in self._args:
-            self._args.pop(vname)
-
-    def render(self, tname):
-        """
-        Primarily internal function, renders specified template file
-        and returns result as string, ready to be sent to browser.
-        Called by TemplateEngine.output(tname) automatically.
-        :param tname: - template file name
-        :return: rendered template text
-        """
-        tmpl = self._lookup.get_template(tname)
-        return tmpl.render(**self._args)
-
-    def output(self, tname):
-        """
-        Renders html template file (using TemplateEngine.render(tname).
-        Then outputs all to browser: sends HTTP headers (such as Content-type),
-        then sends rendered template. Includes Mako exceptions handler
-        :param tname: - template file name to output
-        :return: None
-        """
-        if not self._headers_sent:
-            print('Content-Type: text/html')
-            print()
-            self._headers_sent = True
-        # MAKO exceptions handler
-        try:
-            rendered = self.render(tname)
-            # python IO encoding mut be set to utf-8 (see ../index.py header for details)
-            print(rendered)
-        except exceptions.MakoException:
-            print(exceptions.html_error_template().render())
-
-
-class GalaxyDB:
-
-    PLANET_TYPE_PLANET = 1
-    PLANET_TYPE_BASE = 5
-
-    def __init__(self):
-        self._conn = sqlite3.connect('galaxy5.db')
-        self._conn.row_factory = sqlite3.Row
-        self._cur = self._conn.cursor()
-        self._log_queries = False
-
-    def create_query(self, where_clause=None, sort_col=None, sort_order=None):
-        q = 'SELECT g,s,p, \n' \
-            '  planet_id, planet_name, planet_type, planet_metal, planet_crystal, planet_destroyed, \n' \
-            '  luna_id, luna_name, luna_diameter, luna_destroyed, \n' \
-            '  user_id, user_name, user_rank, user_onlinetime, user_banned, user_ro, user_race, \n' \
-            '  ally_id, ally_name, ally_tag, ally_members \n' \
-            ' FROM planets'
-        if where_clause is not None:
-            q += ' \n'
-            q += where_clause
-        # sort, order
-        q += '\n ORDER BY '
-        # fix invalid input
-        if sort_order is not None:
-            if sort_order not in ['asc', 'desc']:
-                sort_order = None
-        if sort_col is not None:
-            if sort_col not in ['planet_name', 'planet_type', 'user_name', 'user_rank', 'ally_name', 'luna_name']:
-                sort_col = None
-        # append sorting
-        if sort_col is not None:
-            q += sort_col
-            if sort_order is not None:
-                q += ' '
-                q += sort_order
-            q += ', '
-        q += 'g ASC, s ASC, p ASC'  # by default, always sort by coords
-        # log query
-        if self._log_queries:
-            try:
-                with open('queries.log', mode='at', encoding='UTF-8') as f:
-                    f.write(q)
-                    f.write('\n')
-            except IOError:
-                pass
-        return q
-
-    @staticmethod
-    def safe_int(val):
-        if val is None:
-            return 0
-        try:
-            r = int(val)
-        except ValueError:
-            r = 0
-        return r
-
-    @staticmethod
-    def safe_str(val):
-        if val is None:
-            return ''
-        return str(val)
-
-    def _rows_to_res_list(self):
-        rows_list = []
-        rows = self._cur.fetchall()
-        for row in rows:
-            r = dict()
-            r['coords'] = '[{0}:{1}:{2}]'.format(row['g'], row['s'], row['p'])
-            r['coords_link'] = '<a href="http://uni5.xnova.su/galaxy/{3}/{4}/" target="_blank">' \
-                               '[{0}:{1}:{2}]</a>'.format(row['g'], row['s'], row['p'],
-                                                          row['g'], row['s'])
-            r['planet_id'] = GalaxyDB.safe_int(row['planet_id'])
-            r['planet_name'] = GalaxyDB.safe_str(row['planet_name'])
-            r['planet_type'] = GalaxyDB.safe_int(row['planet_type'])
-            r['user_id'] = GalaxyDB.safe_int(row['user_id'])
-            r['user_name'] = GalaxyDB.safe_str(row['user_name'])
-            r['user_rank'] = GalaxyDB.safe_int(row['user_rank'])
-            r['user_onlinetime'] = GalaxyDB.safe_int(row['user_onlinetime'])
-            r['user_banned'] = GalaxyDB.safe_int(row['user_banned'])
-            r['user_ro'] = GalaxyDB.safe_int(row['user_ro'])
-            # fix user name to include extra data
-            user_flags = ''
-            if r['user_ro'] > 0:
-                user_flags += 'U'
-            if r['user_banned'] > 0:
-                user_flags += 'G'
-            if r['user_onlinetime'] == 1:
-                user_flags += 'i'
-            if r['user_onlinetime'] == 2:
-                user_flags += 'I'
-            if user_flags != '':
-                r['user_name'] += ' (' + user_flags + ')'
-            # user race and race icon
-            r['user_race'] = GalaxyDB.safe_int(row['user_race'])
-            r['user_race_img'] = '<img border="0" src="css/icons/race{0}.png" width="18" />'.format(r['user_race'])
-            r['ally_name'] = GalaxyDB.safe_str(row['ally_name'])
-            r['ally_tag'] = GalaxyDB.safe_str(row['ally_tag'])
-            r['ally_members'] = GalaxyDB.safe_int(row['ally_members'])
-            # process ally info
-            if r['ally_tag'] != r['ally_name']:
-                r['ally_name'] += ' [{0}]'.format(r['ally_tag'])
-            r['ally_name'] += ' ({0} тел)'.format(r['ally_members'])
-            if r['ally_members'] == 0:
-                r['ally_name'] = ''
-            r['luna_name'] = GalaxyDB.safe_str(row['luna_name'])
-            r['luna_diameter'] = GalaxyDB.safe_int(row['luna_diameter'])
-            # process luna
-            if (r['luna_name'] != '') and (r['luna_diameter'] > 0):
-                r['luna_name'] += ' ({0})'.format(r['luna_diameter'])
-            # process planet type (detect bases)
-            if r['planet_type'] == GalaxyDB.PLANET_TYPE_BASE:
-                r['planet_name'] += ' (base)'
-            rows_list.append(r)
-        res_dict = dict()
-        res_dict['rows'] = rows_list
-        return res_dict
-
-    def query_like(self, col_name, value, sort_col=None, sort_order=None):
-        if type(col_name) == str:
-            where = 'WHERE ' + col_name + ' LIKE ?'
-            params = (value, )
-        elif type(col_name) == list:
-            where = 'WHERE'
-            params = list()
-            for col in col_name:
-                where += ' '
-                where += col
-                where += ' LIKE ? OR'
-                params.append(value)
-            where = where[0:-2]
-        else:
-            where = None
-            params = None
-        q = self.create_query(where, sort_col, sort_order)
-        self._cur.execute(q, params)
-        return self._rows_to_res_list()
-
-    def query_inactives(self, user_flags, gals, s_min, s_max, min_rank=0, sort_col=None, sort_order=None):
-        user_where = ''
-        gals_where = ''
-        syss_where = ''
-        rank_where = ''
-        # user flags
-        # user online time
-        user_ot = ''
-        if 'i' in user_flags:
-            user_ot = 'user_onlinetime=1'
-        if 'I' in user_flags:
-            user_ot = 'user_onlinetime>0'
-        user_where += user_ot
-        # user banned or not banned, exlusively set
-        if 'G' in user_flags:
-            if user_where != '':
-                user_where += ' AND '
-            user_where += 'user_banned>0'
-        else:
-            if user_where != '':
-                user_where += ' AND '
-            user_where += 'user_banned=0'
-        # user ro or not, exclusively
-        if 'U' in user_flags:
-            if user_where != '':
-                user_where += ' AND '
-            user_where += 'user_ro>0'
-        else:
-            if user_where != '':
-                user_where += ' AND '
-            user_where += 'user_ro=0'
-        # galaxies
-        if type(gals) == list:
-            gals_where = 'g IN ('
-            for g in gal_ints:
-                gals_where += '{0},'.format(g)
-            gals_where = gals_where[0:-1]
-            gals_where += ')'
-        # systems
-        if s_min <= s_max:
-            syss_where = 's BETWEEN {0} AND {1}'.format(s_min, s_max)
-        # rank
-        if min_rank > 0:
-            rank_where = ' AND (user_rank BETWEEN 1 AND {0})'.format(min_rank)
-        # final WHERE clause
-        where = 'WHERE ({0}) AND ({1}) AND ({2}) {3}'.format(user_where, gals_where, syss_where, rank_where)
-        q = self.create_query(where, sort_col, sort_order)
-        self._cur.execute(q)
-        return self._rows_to_res_list()
-
-    def query_planets_count(self, gal: int, sys_: int) -> int:
-        self._cur.execute('SELECT COUNT(*) FROM planets WHERE g=? AND s=?', (gal, sys_))
-        rows = self._cur.fetchall()
-        assert len(rows) == 1
-        assert len(rows[0]) == 1
-        return self.safe_int(rows[0][0])
+from classes.template_engine import TemplateEngine
+from classes.galaxy_db import GalaxyDB
 
 
 def debugprint(obj=None):
@@ -407,6 +136,21 @@ if AJAX_ACTION == 'grid':
     ret['total'] = len(ret['rows'])  # ret should have total count:
     # extra debug data
     ret['QUERY_STRING'] = QUERY_STRING
+    output_as_json(ret)
+    exit()
+
+if AJAX_ACTION == 'lastactive':
+    ret = dict()
+    ret['rows'] = []
+    ret['total'] = 0
+    #
+    player_name = req_param('query')
+    if (player_name is not None) and (player_name != ''):
+        gdb = GalaxyDB()
+        planets_info = gdb.query_player_planets(player_name)
+        ret['planets_info'] = planets_info
+        pass
+    #
     output_as_json(ret)
     exit()
 
