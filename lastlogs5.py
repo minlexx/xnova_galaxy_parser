@@ -116,19 +116,24 @@ class PageParser(XNParserBase):  # parent of XNParserBase is html.parser.HTMLPar
                 try:
                     self.attacker_coords += self._attackers_coords_dict[att] + ','
                 except KeyError:
-                    logger.error('Cannot find [{0}] in attacker coords dict, attackers list:')
+                    logger.error('Cannot find [{0}] in attacker coords dict, attackers list:'.format(att))
                     logger.error('{0}'.format(str(self._attackers_list)))
             for defender in self._defenders_list:
                 try:
                     self.defender_coords += self._defender_coords_dict[defender] + ','
                 except KeyError:
-                    logger.error('Cannot find [{0}] in defender coords dict, defenders list:')
+                    logger.error('Cannot find [{0}] in defender coords dict, defenders list:'.format(defender))
                     logger.error('{0}'.format(str(self._defenders_list)))
             self.attacker_coords = self.attacker_coords[:-1]
             self.defender_coords = self.defender_coords[:-1]
 
     # @override XNParserBase.handle_data2()
     def handle_data2(self, data: str, tag: str, attrs: list):
+        if tag == 'center':
+            # <div id="report" class="table-responsive">
+            # <center>Данный лог боя пока недоступен для просмотра!</center></div>
+            if data == 'Данный лог боя пока недоступен для просмотра!':
+                self.is_nonexistent_log = True
         if tag == 'title':
             logger.debug('Found title: [{0}]'.format(data))
             # <title>Боевой доклад :: Звездная Империя 5</title> - success, we have log
@@ -259,10 +264,15 @@ def main():
 
     num_errors = 0
     max_errors = 20
+    look_back_logs = 10
     num_logs_parsed = 0
     failed_logids = []
     nonexistent_logids = []
     log_id = lastlog_id
+    # look also several logs backwards
+    if log_id > look_back_logs:
+        log_id -= look_back_logs
+        max_errors += look_back_logs
     while True:
         page_dnl.set_referer('https://uni5.xnova.su/log/')
         url = 'log/{0}/'.format(log_id)
