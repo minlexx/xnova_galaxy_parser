@@ -7,6 +7,7 @@ import json
 import sqlite3
 import time
 import re
+import configparser
 
 from classes.template_engine import TemplateEngine
 from classes.galaxy_db import GalaxyDB
@@ -152,13 +153,32 @@ if AJAX_ACTION == 'lastactive':
         # ret['planets_info'] = planets_info  # checked - this is OK
         # list of dicts [{'g': 1, 's': 23, 'p': 9, ...}, {...}, {...}, ...]
         if len(planets_info) > 0:
-            # cookies_dict = xnova_authorize('uni5.xnova.su', 'login', 'password')
-            # hope this cookie will live long enough
+            # 1. cookies_dict = xnova_authorize('uni5.xnova.su', 'login', 'password')
+            # 2. hope this cookie will live long enough
+            # cookies_dict = {
+            #    'u5_id': '87',
+            #    'u5_secret': 'c...7',
+            #    'u5_full': 'N'
+            # }
+            # 3. read from config file
             cookies_dict = {
-                'u5_id': '87',
-                'u5_secret': 'c01aa2ad533ddf1e890459df34450b87',
+                'u5_id': '0',
+                'u5_secret': '',
                 'u5_full': 'N'
             }
+            cfg = configparser.ConfigParser()
+            cfgs_read = cfg.read(['config.ini'])
+            if 'config.ini' not in cfgs_read:
+                ret['error'] = 'Failed to load xnova auth cookies from config.ini'
+                output_as_json(ret)
+                exit()
+            if 'lastactive' not in cfg.sections():
+                ret['error'] = 'Cannot find [lastactive] section in config.ini'
+                output_as_json(ret)
+                exit()
+            cookies_dict['u5_id'] = cfg['lastactive']['u5_id']
+            cookies_dict['u5_secret'] = cfg['lastactive']['u5_secret']
+            #
             dnl = PageDownloader(cookies_dict=cookies_dict)
             gparser = XNGalaxyParser()
             cached_pages = dict()  # coords -> page_content
