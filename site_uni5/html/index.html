@@ -143,7 +143,7 @@
   </div>
 
   <div title="Карта" iconCls="" closable="false" style="padding:10px;">
-    <p class="gmap_controls">
+    <!-- <p class="gmap_controls">
       <input type="button" value="Плотность заселения" onclick="gmap_request_population();" />
     </p>
     <svg id="gmap" width="500" height="80"></svg>
@@ -152,20 +152,18 @@
       var gmap_rect_map_bg = gmap_svg.rect(500, 80).attr({ fill: '#000' }).x(0).y(0);
       var gmap_text_loading = gmap_svg.text("Loading...").attr({ fill: '#fff' }).center(250, 40);
       gmap_text_loading.hide();
-    </script>
+    </script> -->
+    <p>На доработке...</p>
   </div>
 
-  <div title="База данных" iconCls="icon-save" closable="false" style="padding:10px;">
-    <p>SQLite 3 база:
-      <a href="galaxy5.db">
+  <div title="Android будильник" iconCls="icon-android" closable="false" style="padding:10px;">
+    <p>Скачать APK:
+      <a href="xn_alarm.apk">
         <img src="css/icons/filesave.png" style="vertical-align: middle" />
-        galaxy5.db</a>,
-      <i>~52 Kb</i>
+        xn_alarm.apk</a>,
+      <i>~752 Kb</i>
     </p>
-    <p>Процесс обновления базы галактики:</p>
-    <div id="p_dbupdate" class="easyui-progressbar" data-options="value:100" style="width:300px;"></div>
-    <div id="p_dbupdate_pos" style="display: inline;"></div>
-    <p>(промежуточные значения будут указывать на то, что данный момент идет обновление БД)</p>
+    <p>Руководство по использованию: надо б написать...</p>
   </div>
 </div>
 <br />
@@ -232,7 +230,7 @@ $('#dg_lastlogs').datagrid({
   ]]
 });
 
-window.setTimeout( request_dbupdate_progress, 15000 );
+//window.setTimeout( request_dbupdate_progress, 15000 );
 </script>
 
 <br />
