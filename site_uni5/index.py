@@ -8,6 +8,7 @@ import sqlite3
 import time
 import re
 import configparser
+import datetime
 
 from classes.template_engine import TemplateEngine
 from classes.galaxy_db import GalaxyDB
@@ -77,6 +78,21 @@ def fit_in_range(v: int, lower_range: int, upper_range: int) -> int:
     if v > upper_range:
         v = upper_range
     return v
+
+
+def get_file_mtime_utc(fn: str) -> datetime.datetime:
+    try:
+        s = os.stat(fn)
+        dt = datetime.datetime.utcfromtimestamp(s.st_mtime)
+        return dt
+    except FileNotFoundError:
+        return None
+
+
+def get_file_mtime_utc_for_template(fn: str) -> str:
+    dt = get_file_mtime_utc(fn)
+    if dt is None: return ''
+    return dt.strftime('%Y-%m-%d %H:%M:%S')
 
 
 if AJAX_ACTION == 'grid':
@@ -320,4 +336,6 @@ if AJAX_ACTION == 'gmap_population':
 template = TemplateEngine({
     'TEMPLATE_DIR': './html',
     'TEMPLATE_CACHE_DIR': './cache'})
+template.assign('galaxy_mtime', get_file_mtime_utc_for_template('galaxy5.db'))
+template.assign('lastlogs_mtime', get_file_mtime_utc_for_template('lastlogs5.db'))
 template.output('index.html')

@@ -15,7 +15,7 @@
 
 <body>
 
-<h1>Карта вселенной uni5 </h1>[ <a href="../xnova/">uni4</a> | uni5 ]
+<h1>Карта вселенной uni5 </h1><!-- [ <a href="../xnova/">uni4</a> | uni5 ] -->
 
 <div class="easyui-tabs" style="width:100%">
 
@@ -29,6 +29,11 @@
       <div data-options="name:'player'">Игрок</div>
       <div data-options="name:'alliance'">Альянс</div>
     </div>
+
+    <br />
+    <span class="comment">Поиск ведется в заранее составленной БД и не генерирует
+      запросов на сервер игры.</span>
+    <span class="comment">Последнее обновление БД: ${galaxy_mtime} UTC</span>
   </div>
 
   <div title="Проверка онлайна" iconCls="icon-search" closable="false" style="padding:10px;">
@@ -49,6 +54,9 @@
   <div title="Поиск неактивных" iconCls="icon-search" closable="false" style="padding:10px;">
     <p>Поиск неактивных игроков, забаненных итд. Можно выбрать, кого включить в поиск,
       и дополнительно задать диапазон координат для поиска.</p>
+    <span class="comment">Поиск ведется в заранее составленной БД и не генерирует
+      запросов на сервер игры.</span>
+    <span class="comment">Последнее обновление БД: ${galaxy_mtime} UTC</span>
     <table border="0" cellpadding="10" cellspacing="5" width="90%">
       <tr>
         <td rowspan="3" style="vertical-align:top; width:200px">
@@ -118,7 +126,7 @@
   </div>
 
   <div title="Последние бои" iconCls="icon-tip" closable="false" style="padding:10px;">
-    Логи боев за последние
+    <span>Логи боев за последние</span>
     <input id="sb_lastlogs" class="easyui-searchbox"
            data-options="prompt:'24',menu:'#sb_ll_menu',searcher:load_lastlogs"
            style="width:150px" value="24" />
@@ -135,7 +143,8 @@
 
     <br />
     <span class="comment">Сюда попадают все логи, как автоматически сохраняемые сервером,
-      так и вручную</span>
+      так и вручную.</span>
+    <span class="comment">Последнее обновление логов боев: ${lastlogs_mtime} UTC</span>
     <br />
     <br />
 
@@ -156,7 +165,7 @@
     <p>На доработке...</p>
   </div>
 
-  <div title="Android будильник" iconCls="icon-android" closable="false" style="padding:10px;">
+  <!--<div title="Android будильник" iconCls="icon-android" closable="false" style="padding:10px;">
     <p>Скачать APK:
       <a href="xn_alarm.apk">
         <img src="css/icons/filesave.png" style="vertical-align: middle" />
@@ -164,7 +173,7 @@
       <i>~752 Kb</i>
     </p>
     <p>Руководство по использованию: надо б написать...</p>
-  </div>
+  </div> -->
 </div>
 <br />
 
