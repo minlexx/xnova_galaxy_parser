@@ -9,10 +9,10 @@ import re
 import requests
 import execjs
 # local includes
-from ui.xnova import xn_logger
-from ui.xnova.xn_page_cache import XNovaPageCache
-from ui.xnova.xn_page_dnl import XNovaPageDownload
-from ui.xnova.xn_parser_galaxy import GalaxyParser
+from xnova import xn_logger
+from xnova.xn_page_cache import XNovaPageCache
+from xnova.xn_page_dnl import XNovaPageDownload
+from xnova.xn_parser_galaxy import GalaxyParser
 
 # globals
 g_logger = xn_logger.get(__name__, debug=True)
