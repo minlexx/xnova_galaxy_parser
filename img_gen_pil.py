@@ -8,9 +8,10 @@
 # - zlib devel files (zlib1g-dev)
 # - libjpeg, libjpeg-devel
 
-import sys
+import io
 import logging
 import sqlite3
+import sys
 
 try:
     import PIL
@@ -113,6 +114,12 @@ def draw_moons(img: PIL.Image.Image):
         # img.putpixel((x, y), (255, 255, 0, 255))
         draw.ellipse([(x-2, y-2), (x+2, y+2)], fill=(255, 255, 0, 128), outline=None)
     cur.close()
+
+
+def get_image_bytes(img: PIL.Image.Image, fmt=None) -> bytes:
+    bio = io.BytesIO()
+    img.save(fp=bio, format=fmt)
+    return bio.getvalue()
 
 
 def main():
