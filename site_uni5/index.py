@@ -1,18 +1,19 @@
 #!/usr/bin/python3-utf8
 # -*- coding: utf-8 -*-
 
-import os
-import urllib.parse
-import json
-import sqlite3
-import time
-import re
 import configparser
 import datetime
+import json
+import os
+import re
+import sqlite3
+import sys
+import time
+import urllib.parse
 
 from classes.template_engine import TemplateEngine
 from classes.galaxy_db import GalaxyDB
-from classes.xnova_utils import xnova_authorize, PageDownloader, XNGalaxyParser
+from classes.xnova_utils import PageDownloader, XNGalaxyParser
 
 
 def debugprint(obj=None):
@@ -55,12 +56,23 @@ if 'QUERY_STRING' in os.environ:
     QUERY_STRING = os.environ['QUERY_STRING']
 MODE = ''
 AJAX_ACTION = ''
+GMAP_MODE = ''
+GMAP_OBJECTS = ''
+GMAP_NAME = ''
 if QUERY_STRING != '':
     QUERY_PARAMS = urllib.parse.parse_qs(QUERY_STRING)
     if 'ajax' in QUERY_PARAMS:
         MODE = 'ajax'
         if len(QUERY_PARAMS['ajax']) > 0:
             AJAX_ACTION = QUERY_PARAMS['ajax'][0]
+    if 'galaxymap' in QUERY_PARAMS:
+        MODE = 'galaxymap'
+        if len(QUERY_PARAMS['galaxymap']) > 0:
+            GMAP_MODE = QUERY_PARAMS['galaxymap'][0]
+        if 'objects' in QUERY_PARAMS:
+            GMAP_OBJECTS = QUERY_PARAMS['objects'][0]
+        if 'name' in QUERY_PARAMS:
+            GMAP_NAME = QUERY_PARAMS['name'][0]
 
 
 def req_param(name, def_val=None):
@@ -82,8 +94,8 @@ def fit_in_range(v: int, lower_range: int, upper_range: int) -> int:
 
 def get_file_mtime_utc(fn: str) -> datetime.datetime:
     try:
-        s = os.stat(fn)
-        dt = datetime.datetime.utcfromtimestamp(s.st_mtime)
+        fst = os.stat(fn)
+        dt = datetime.datetime.utcfromtimestamp(fst.st_mtime)
         return dt
     except FileNotFoundError:
         return None
@@ -91,7 +103,8 @@ def get_file_mtime_utc(fn: str) -> datetime.datetime:
 
 def get_file_mtime_utc_for_template(fn: str) -> str:
     dt = get_file_mtime_utc(fn)
-    if dt is None: return ''
+    if dt is None:
+        return ''
     return dt.strftime('%Y-%m-%d %H:%M:%S')
 
 
@@ -149,7 +162,7 @@ if AJAX_ACTION == 'grid':
     # fix empty response
     if ret is None:
         ret = dict()
-    if not 'rows' in ret:  # ret should have rows
+    if 'rows' not in ret:  # ret should have rows
         ret['rows'] = []
     ret['total'] = len(ret['rows'])  # ret should have total count:
     # extra debug data
@@ -331,6 +344,35 @@ if AJAX_ACTION == 'gmap_population':
             population_data.append(gdb.query_planets_count(g, s))
     output_as_json(population_data)
     exit()
+
+if MODE == 'galaxymap':
+    from classes.img_gen_pil import generate_background, get_image_bytes, draw_galaxy_grid, \
+        draw_population, draw_moons
+
+    def output_img(img):
+        img_bytes = get_image_bytes(img, 'PNG')
+        print('Content-Type: image/png')
+        # print('Content-Type: text/plain')
+        print('')
+        sys.stdout.flush()
+        os.write(sys.stdout.fileno(), img_bytes)
+        sys.stdout.flush()
+
+    grid_color = (128, 128, 255, 255)
+
+    if GMAP_MODE == 'population':
+        img = generate_background()
+        draw_population(img)
+        draw_galaxy_grid(img, color=grid_color)
+        output_img(img)
+        exit()
+    elif GMAP_MODE == 'moons':
+        img = generate_background()
+        draw_population(img)
+        draw_moons(img)
+        draw_galaxy_grid(img, color=grid_color)
+        output_img(img)
+        exit()
 
 
 template = TemplateEngine({
