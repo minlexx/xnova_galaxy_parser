@@ -116,6 +116,22 @@ def draw_moons(img: PIL.Image.Image):
     cur.close()
 
 
+def draw_player_planets(img: PIL.Image.Image, user_name: str):
+    draw = PIL.ImageDraw.Draw(img)
+    q = 'SELECT g, s, p FROM planets WHERE user_name LIKE ?'
+    cur = g_db.cursor()
+    cur.execute(q, (user_name, ))
+    rows = cur.fetchall()
+    for row in rows:
+        x = int(row[1]) * SCALE_X  # system
+        y = HEIGHT - int(row[0]) * SCALE_Y  # galaxy
+        y += round(SCALE_Y * (int(row[2]) / 15))  # position
+        # g_logger.debug('Row: {0}, xy: {1}, {2}'.format(row, x, y))
+        # img.putpixel((x, y), (255, 255, 0, 255))
+        draw.ellipse([(x - 2, y - 2), (x + 2, y + 2)], fill=(255, 255, 0, 128), outline=None)
+    cur.close()
+
+
 def get_image_bytes(img: PIL.Image.Image, fmt=None) -> bytes:
     bio = io.BytesIO()
     img.save(fp=bio, format=fmt)
