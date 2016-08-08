@@ -116,11 +116,31 @@ def draw_moons(img: PIL.Image.Image):
     cur.close()
 
 
-def draw_player_planets(img: PIL.Image.Image, user_name: str):
+def draw_player_planets(img: PIL.Image.Image, user_name: str, moons_only: bool = False):
     draw = PIL.ImageDraw.Draw(img)
-    q = 'SELECT g, s, p FROM planets WHERE user_name LIKE ?'
+    q = 'SELECT g, s, p FROM planets WHERE (user_name LIKE ?)'
+    if moons_only:
+        q += ' AND (luna_id > 0)'
     cur = g_db.cursor()
     cur.execute(q, (user_name, ))
+    rows = cur.fetchall()
+    for row in rows:
+        x = int(row[1]) * SCALE_X  # system
+        y = HEIGHT - int(row[0]) * SCALE_Y  # galaxy
+        y += round(SCALE_Y * (int(row[2]) / 15))  # position
+        # g_logger.debug('Row: {0}, xy: {1}, {2}'.format(row, x, y))
+        # img.putpixel((x, y), (255, 255, 0, 255))
+        draw.ellipse([(x - 2, y - 2), (x + 2, y + 2)], fill=(255, 255, 0, 128), outline=None)
+    cur.close()
+
+
+def draw_alliance_planets(img: PIL.Image.Image, ally_name: str, moons_only: bool = False):
+    draw = PIL.ImageDraw.Draw(img)
+    q = 'SELECT g, s, p FROM planets WHERE ((ally_name LIKE ?) OR (ally_tag LIKE ?))'
+    if moons_only:
+        q += ' AND (luna_id > 0)'
+    cur = g_db.cursor()
+    cur.execute(q, (ally_name, ally_name ))
     rows = cur.fetchall()
     for row in rows:
         x = int(row[1]) * SCALE_X  # system
@@ -141,7 +161,9 @@ def get_image_bytes(img: PIL.Image.Image, fmt=None) -> bytes:
 def main():
     img = generate_background()
     draw_population(img)
-    draw_moons(img)
+    # draw_moons(img)
+    # draw_player_planets(img, 'DemonDV', moons_only=False)
+    draw_alliance_planets(img, 'НеДорого', moons_only=True)
     draw_galaxy_grid(img, (128, 128, 255, 255))
     img.save(g_output_filename)
     #
