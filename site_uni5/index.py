@@ -70,9 +70,11 @@ if QUERY_STRING != '':
         if len(QUERY_PARAMS['galaxymap']) > 0:
             GMAP_MODE = QUERY_PARAMS['galaxymap'][0]
         if 'objects' in QUERY_PARAMS:
-            GMAP_OBJECTS = QUERY_PARAMS['objects'][0]
+            if len(QUERY_PARAMS['objects']) > 0:
+                GMAP_OBJECTS = QUERY_PARAMS['objects'][0]
         if 'name' in QUERY_PARAMS:
-            GMAP_NAME = QUERY_PARAMS['name'][0]
+            if len(QUERY_PARAMS['name']) > 0:
+                GMAP_NAME = QUERY_PARAMS['name'][0]
 
 
 def req_param(name, def_val=None):
@@ -347,12 +349,11 @@ if AJAX_ACTION == 'gmap_population':
 
 if MODE == 'galaxymap':
     from classes.img_gen_pil import generate_background, get_image_bytes, draw_galaxy_grid, \
-        draw_population, draw_moons
+        draw_population, draw_moons, draw_player_planets, draw_alliance_planets
 
     def output_img(img):
         img_bytes = get_image_bytes(img, 'PNG')
         print('Content-Type: image/png')
-        # print('Content-Type: text/plain')
         print('')
         sys.stdout.flush()
         os.write(sys.stdout.fileno(), img_bytes)
@@ -360,19 +361,29 @@ if MODE == 'galaxymap':
 
     grid_color = (128, 128, 255, 255)
 
+    img = generate_background()
+    draw_population(img)
+
     if GMAP_MODE == 'population':
-        img = generate_background()
         draw_population(img)
-        draw_galaxy_grid(img, color=grid_color)
-        output_img(img)
-        exit()
     elif GMAP_MODE == 'moons':
-        img = generate_background()
-        draw_population(img)
         draw_moons(img)
-        draw_galaxy_grid(img, color=grid_color)
-        output_img(img)
-        exit()
+    elif GMAP_MODE == 'player':
+        only_moons = False
+        if GMAP_OBJECTS == 'moons':
+            only_moons = True
+        draw_player_planets(img, GMAP_NAME, only_moons)
+    elif GMAP_MODE == 'alliance':
+        only_moons = False
+        if GMAP_OBJECTS == 'moons':
+            only_moons = True
+        draw_alliance_planets(img, GMAP_NAME, only_moons)
+
+    # finally, common output
+    draw_galaxy_grid(img, color=grid_color)
+    output_img(img)
+    exit()
+
 
 
 template = TemplateEngine({
