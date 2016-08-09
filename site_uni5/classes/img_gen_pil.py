@@ -140,7 +140,7 @@ def draw_alliance_planets(img: PIL.Image.Image, ally_name: str, moons_only: bool
     if moons_only:
         q += ' AND (luna_id > 0)'
     cur = g_db.cursor()
-    cur.execute(q, (ally_name, ally_name ))
+    cur.execute(q, (ally_name, ally_name))
     rows = cur.fetchall()
     for row in rows:
         x = int(row[1]) * SCALE_X  # system
