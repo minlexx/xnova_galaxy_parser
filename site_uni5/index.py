@@ -97,7 +97,8 @@ def fit_in_range(v: int, lower_range: int, upper_range: int) -> int:
 def get_file_mtime_utc(fn: str) -> datetime.datetime:
     try:
         fst = os.stat(fn)
-        dt = datetime.datetime.utcfromtimestamp(fst.st_mtime)
+        # construct datetime object as timezone-aware
+        dt = datetime.datetime.fromtimestamp(fst.st_mtime, tz=datetime.timezone.utc)
         return dt
     except FileNotFoundError:
         return None
@@ -106,8 +107,19 @@ def get_file_mtime_utc(fn: str) -> datetime.datetime:
 def get_file_mtime_utc_for_template(fn: str) -> str:
     dt = get_file_mtime_utc(fn)
     if dt is None:
+        return 'never'
+    return dt.strftime('%Y-%m-%d %H:%M:%S UTC')
+
+
+def get_file_mtime_msk_for_template(fn: str) -> str:
+    dt = get_file_mtime_utc(fn)  # now already returns TZ-aware datetime object
+    if dt is None:
         return ''
-    return dt.strftime('%Y-%m-%d %H:%M:%S')
+    # create MSK timezone object
+    tz_msk = datetime.timezone(datetime.timedelta(hours=3))
+    # convert UTC datetime to MSK datetime
+    dt_msk = dt.astimezone(tz=tz_msk)
+    return dt_msk.strftime('%Y-%m-%d %H:%M:%S MSK')
 
 
 if AJAX_ACTION == 'grid':
@@ -385,10 +397,9 @@ if MODE == 'galaxymap':
     exit()
 
 
-
 template = TemplateEngine({
     'TEMPLATE_DIR': './html',
     'TEMPLATE_CACHE_DIR': './cache'})
-template.assign('galaxy_mtime', get_file_mtime_utc_for_template('galaxy5.db'))
-template.assign('lastlogs_mtime', get_file_mtime_utc_for_template('lastlogs5.db'))
+template.assign('galaxy_mtime', get_file_mtime_msk_for_template('galaxy5.db'))
+template.assign('lastlogs_mtime', get_file_mtime_msk_for_template('lastlogs5.db'))
 template.output('index.html')
