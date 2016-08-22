@@ -13,7 +13,7 @@ import urllib.parse
 
 from classes.template_engine import TemplateEngine
 from classes.galaxy_db import GalaxyDB
-from classes.xnova_utils import PageDownloader, XNGalaxyParser
+from classes.xnova_utils import PageDownloader, XNGalaxyParser, xnova_authorize
 
 
 def debugprint(obj=None):
@@ -219,8 +219,13 @@ if AJAX_ACTION == 'lastactive':
                 ret['error'] = 'Cannot find [lastactive] section in config.ini'
                 output_as_json(ret)
                 exit()
-            cookies_dict['u5_id'] = cfg['lastactive']['u5_id']
-            cookies_dict['u5_secret'] = cfg['lastactive']['u5_secret']
+            cookies_dict = xnova_authorize('uni5.xnova.su',
+                                           cfg['lastactive']['xn_login'],
+                                           cfg['lastactive']['xn_password'])
+            if cookies_dict is None:
+                ret['error'] = 'Failed to authorize to xnova site!'
+                output_as_json(ret)
+                exit()
             #
             dnl = PageDownloader(cookies_dict=cookies_dict)
             gparser = XNGalaxyParser()
