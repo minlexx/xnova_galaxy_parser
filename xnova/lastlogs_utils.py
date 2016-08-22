@@ -88,3 +88,4 @@ class LLDb:
                         o.po_me, o.po_cry, o.win_me, o.win_cry, o.win_deit))
         self._conn.commit()
         cur.close()
+        logger.info('Saved log id: {0}'.format(o.log_id))
