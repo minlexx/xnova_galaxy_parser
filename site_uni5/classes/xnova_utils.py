@@ -52,13 +52,13 @@ def xnova_authorize(xn_host, xn_login, xn_password) -> dict:
 class PageDownloader:
     def __init__(self, cookies_dict: dict=None):
         self.xnova_url = 'uni5.xnova.su'
-        self.user_agent = 'Mozilla/5.0 (Windows NT 6.1; WOW64; rv:40.0) Gecko/20100101 Firefox/40.0'
+        self.user_agent = 'Mozilla/5.0 (Windows NT 6.1; WOW64; rv:48.0) Gecko/20100101 Firefox/48.0'
         self.error_str = None
         self.proxy = None
         # construct requests HTTP session
         self.sess = requests.Session()  # else normal session
         self.sess.headers.update({'user-agent': self.user_agent})
-        self.sess.headers.update({'referer': 'http://{0}/'.format(self.xnova_url)})
+        self.sess.headers.update({'referer': 'https://{0}/'.format(self.xnova_url)})
         if cookies_dict:
             self.set_cookies_from_dict(cookies_dict)
 

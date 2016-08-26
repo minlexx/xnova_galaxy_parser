@@ -18,7 +18,7 @@ logger = xn_logger.get(__name__, debug=False)
 class XNovaPageDownload:
     def __init__(self, cookies_dict: dict=None):
         self.xnova_url = 'uni4.xnova.su'
-        self.user_agent = 'Mozilla/5.0 (Windows NT 6.1; WOW64; rv:40.0) Gecko/20100101 Firefox/40.0'
+        self.user_agent = 'Mozilla/5.0 (Windows NT 6.1; WOW64; rv:48.0) Gecko/20100101 Firefox/48.0'
         self.error_str = None
         self.proxy = None
         # load user-agent from config/net.ini
@@ -42,7 +42,7 @@ class XNovaPageDownload:
             self.sess.proxies = {'http': self.proxy, 'https': self.proxy}
             logger.info('Set HTTP/HTTPS proxy to: {0}'.format(self.proxy))
         self.sess.headers.update({'user-agent': self.user_agent})
-        self.sess.headers.update({'referer': 'http://{0}/'.format(self.xnova_url)})
+        self.sess.headers.update({'referer': 'https://{0}/'.format(self.xnova_url)})
         if cookies_dict:
             self.set_cookies_from_dict(cookies_dict)
 
