@@ -41,8 +41,14 @@ class XNovaPageDownload:
         if self.proxy is not None:
             self.sess.proxies = {'http': self.proxy, 'https': self.proxy}
             logger.info('Set HTTP/HTTPS proxy to: {0}'.format(self.proxy))
-        self.sess.headers.update({'user-agent': self.user_agent})
-        self.sess.headers.update({'referer': 'https://{0}/'.format(self.xnova_url)})
+
+        # Some default headers for a page downloader
+        self.sess.headers.update({'User-Agent': self.user_agent})
+        self.sess.headers.update({'Referer': 'https://{0}/'.format(self.xnova_url)})
+        self.sess.headers.update({'Accept': '*/*'})
+        self.sess.headers.update({'Accept-Language': 'ru-RU,ru;q=0.8,en-US;q=0.6,en;q=0.4'})
+        self.sess.headers.update({'Accept-Encoding': 'gzip, deflate'})
+        
         if cookies_dict:
             self.set_cookies_from_dict(cookies_dict)
 
