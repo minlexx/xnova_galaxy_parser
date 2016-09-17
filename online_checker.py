@@ -1,12 +1,12 @@
 #!/usr/bin/python3
+import argparse
+import json
+import os
+import re
+import six
+import sqlite3
 import sys
 import time
-import sqlite3
-import json
-import argparse
-import re
-import os
-import six
 import unittest
 
 # 3rd party, not used right here, but used by sub-modules anyway
@@ -19,6 +19,15 @@ from xnova.xn_page_cache import XNovaPageCache
 from xnova.xn_page_dnl import XNovaPageDownload
 from xnova.xn_parser_galaxy import GalaxyParser
 from xnova.galaxy_db import GalaxyDB
+
+# wxWidgets?
+try:
+    import wx
+except ImportError:
+    wx = None
+
+# print(str(type(wx)) == "<class 'module'>")  # Lol, module imported
+# print(str(type(wx)) == "<class 'NoneType'>")  # Lol, module not imported
 
 
 class OnlineDB:
@@ -174,8 +183,34 @@ def run_selftests():
     ts.run(tr, debug=True)
 
 
+def run_gui():
+    if wx is None:
+        return False
+
+    wapp = wx.App(False)
+    frame = wx.Frame(None, wx.ID_ANY, "Hello World")  # A Frame is a top-level window.
+    frame.Show(True)  # Show the frame.
+    wapp.MainLoop()
+
+    return True
+
+
+def run_cui():
+    pass
+
+
 def main():
-    run_selftests()
+    ap = argparse.ArgumentParser(description='XNova uni5 players online checker.')
+    ap.add_argument('--version', action='version', version='%(prog)s 0.1')
+    ap.add_argument('--test', action='store_true', help='Run self-tests.')
+    ap_result = ap.parse_args()
+    if ap_result.test:
+        g_logger.info('Will run self-testing.')
+        run_selftests()
+        sys.exit(0)
+    g_logger.info('Normal flow')
+    if not run_gui():
+        run_cui()
 
 
 if __name__ == '__main__':
