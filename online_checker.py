@@ -23,6 +23,7 @@ from xnova.galaxy_db import GalaxyDB
 # wxWidgets?
 try:
     import wx
+    import wx.grid
 except ImportError:
     wx = None
 
@@ -110,6 +111,18 @@ class OnlineDB:
             ret.append(int(row['player_id']))
         return ret
 
+    def get_watched_players(self) -> list:
+        cur = self.db.cursor()
+        q = "SELECT player_id, player_name FROM watched_players ORDER BY add_time"
+        cur.execute(q)
+        rows = cur.fetchall()
+        cur.close()
+        ret = []
+        for row in rows:
+            p_tuple = (int(row['player_id']), str(row['player_name']))
+            ret.append(p_tuple)
+        return ret
+
 
 # globals
 g_logger = xn_logger.get(__name__, debug=True)
@@ -183,13 +196,47 @@ def run_selftests():
     ts.run(tr, debug=True)
 
 
+##############################################################################################
+
+class MainFrame(wx.Frame):
+    def __init__(self, parent, title):
+        super(MainFrame, self).__init__(parent=parent, title=title, size=(500, 400))
+
+        # main sizer
+        self.main_sizer = wx.BoxSizer(orient=wx.HORIZONTAL)
+        self.SetSizer(self.main_sizer)
+
+        # left listbox
+        self.left_lb = wx.ListBox(self, style=wx.LB_SINGLE)
+        self.main_sizer.Add(self.left_lb, 0, wx.EXPAND|wx.ALL, 5)
+
+        # right grid
+        self.grid = wx.grid.Grid(self)
+        self.main_sizer.Add(self.grid, 1, wx.EXPAND | wx.ALL, 5)
+
+        # finally layout
+        self.SetAutoLayout(1)
+        # self.main_sizer.Fit(self)  # to minimum required size, not needed?
+
+        self.CreateStatusBar()
+        self.fill_watched_players()
+        self.Show(True)
+
+    def fill_watched_players(self):
+        wps = g_odb.get_watched_players()
+        g_logger.debug(wps)
+        for p_tuple in wps:
+            self.left_lb.Append('{} (#{})'.format(p_tuple[1], p_tuple[0]))
+
+
 def run_gui():
     if wx is None:
         return False
 
+    g_logger.info('Will run GUI using wxWidgets version {}'.format(wx.version()))
+
     wapp = wx.App(False)
-    frame = wx.Frame(None, wx.ID_ANY, "Hello World")  # A Frame is a top-level window.
-    frame.Show(True)  # Show the frame.
+    frame = MainFrame(None, 'wxOnlineChecker')
     wapp.MainLoop()
 
     return True
@@ -208,7 +255,6 @@ def main():
         g_logger.info('Will run self-testing.')
         run_selftests()
         sys.exit(0)
-    g_logger.info('Normal flow')
     if not run_gui():
         run_cui()
 
