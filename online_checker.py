@@ -198,39 +198,41 @@ def run_selftests():
 
 ##############################################################################################
 
-class MainFrame(wx.Frame):
-    def __init__(self, parent, title):
-        super(MainFrame, self).__init__(parent=parent, title=title, size=(500, 400))
+if wx is not None:
+    class MainFrame(wx.Frame):
+        def __init__(self, parent, title):
+            super(MainFrame, self).__init__(parent=parent, title=title, size=(500, 400))
 
-        # main sizer
-        self.main_sizer = wx.BoxSizer(orient=wx.HORIZONTAL)
-        self.SetSizer(self.main_sizer)
+            # main sizer
+            self.main_sizer = wx.BoxSizer(orient=wx.HORIZONTAL)
+            self.SetSizer(self.main_sizer)
 
-        # left listbox
-        self.left_lb = wx.ListBox(self, style=wx.LB_SINGLE)
-        self.main_sizer.Add(self.left_lb, 0, wx.EXPAND|wx.ALL, 5)
+            # left listbox
+            self.left_lb = wx.ListBox(self, style=wx.LB_SINGLE)
+            self.main_sizer.Add(self.left_lb, 0, wx.EXPAND|wx.ALL, 5)
 
-        # right grid
-        self.grid = wx.grid.Grid(self)
-        self.main_sizer.Add(self.grid, 1, wx.EXPAND | wx.ALL, 5)
+            # right grid
+            self.grid = wx.grid.Grid(self)
+            self.main_sizer.Add(self.grid, 1, wx.EXPAND | wx.ALL, 5)
 
-        # finally layout
-        self.SetAutoLayout(1)
-        # self.main_sizer.Fit(self)  # to minimum required size, not needed?
+            # finally layout
+            self.SetAutoLayout(1)
+            # self.main_sizer.Fit(self)  # to minimum required size, not needed?
 
-        self.CreateStatusBar()
-        self.fill_watched_players()
-        self.Show(True)
+            self.CreateStatusBar()
+            self.fill_watched_players()
+            self.Show(True)
 
-    def fill_watched_players(self):
-        wps = g_odb.get_watched_players()
-        g_logger.debug(wps)
-        for p_tuple in wps:
-            self.left_lb.Append('{} (#{})'.format(p_tuple[1], p_tuple[0]))
+        def fill_watched_players(self):
+            wps = g_odb.get_watched_players()
+            g_logger.debug(wps)
+            for p_tuple in wps:
+                self.left_lb.Append('{} (#{})'.format(p_tuple[1], p_tuple[0]))
 
 
 def run_gui():
     if wx is None:
+        g_logger.warn('wxPython module is not installed, no GUI!')
         return False
 
     g_logger.info('Will run GUI using wxWidgets version {}'.format(wx.version()))
